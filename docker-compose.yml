@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  xbloom-bridge:
+    build: .
+    container_name: xbloom-mqtt-bridge
+    network_mode: host  # Required for BLE access
+    privileged: true    # Required for BLE access
+    restart: unless-stopped
+    
+    environment:
+      # MQTT Configuration
+      MQTT_BROKER: ${MQTT_BROKER:-localhost}
+      MQTT_PORT: ${MQTT_PORT:-1883}
+      MQTT_USERNAME: ${MQTT_USERNAME:-}
+      MQTT_PASSWORD: ${MQTT_PASSWORD:-}
+      
+      # XBloom Configuration  
+      DEVICE_NAME: ${DEVICE_NAME:-xbloom}
+      DEVICE_ADDRESS: ${DEVICE_ADDRESS:-}  # Leave empty for auto-discovery
+      SESSION_TIMEOUT: ${SESSION_TIMEOUT:-60}
+      TELEMETRY_INTERVAL: ${TELEMETRY_INTERVAL:-5}
+      
+      # Logging
+      PYTHONUNBUFFERED: 1
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    
+    command: >
+      xbloom bridge 
+      --broker ${MQTT_BROKER:-localhost}
+      --port ${MQTT_PORT:-1883}
+      --device-name ${DEVICE_NAME:-xbloom}
+      --session-timeout ${SESSION_TIMEOUT:-60}
+      --telemetry-interval ${TELEMETRY_INTERVAL:-5}
+    
+    volumes:
+      # Mount Bluetooth socket
+      - /var/run/dbus:/var/run/dbus:ro
+      
+    devices:
+      # BLE adapter access
+      - /dev/bus/usb:/dev/bus/usb:rwm
+
+  # Optional: Local MQTT broker for testing
+  mosquitto:
+    image: eclipse-mosquitto:2.0
+    container_name: xbloom-mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - mosquitto-data:/mosquitto/data
+      - mosquitto-logs:/mosquitto/log
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+
+volumes:
+  mosquitto-data:
+  mosquitto-logs:
