@@ -27,7 +27,7 @@ class CupType(IntEnum):
     Cup Types from CupType.kt
     """
     X_POD = 1
-    X_DRIPPER = 2
+    OMNI_DRIPPER = 2
     OTHER = 3
     TEA = 4
 

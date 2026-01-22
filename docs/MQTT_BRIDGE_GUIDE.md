@@ -19,7 +19,7 @@ pip install aiomqtt
 xbloom bridge --broker homeassistant.local
 
 # With specific device
-xbloom bridge --broker 192.168.1.100 --device-address B0:F8:93:DB:B1:C1
+xbloom bridge --broker your-broker.local --device-address XX:XX:XX:XX:XX:XX
 
 # With authentication
 xbloom bridge --broker homeassistant.local --username xbloom --password secret123
@@ -61,7 +61,7 @@ docker run -d \
   -e MQTT_BROKER=homeassistant.local \
   -e MQTT_USERNAME=xbloom \
   -e MQTT_PASSWORD=your_password \
-  -e DEVICE_ADDRESS=B0:F8:93:DB:B1:C1 \
+  -e DEVICE_ADDRESS=XX:XX:XX:XX:XX:XX \
   xbloom-bridge \
   xbloom bridge --broker homeassistant.local --username xbloom --password your_password
 ```
@@ -141,6 +141,48 @@ mqtt:
         - "spiral"
         - "circular"
 ```
+
+### 3. XBloom MQTT Integration (Custom Component)
+
+For a more integrated experience, use the custom Home Assistant component located in `custom_components/xbloom_mqtt/`. This provides:
+
+- **Automatic entity creation** for all device sensors, controls, and recipe management
+- **YAML recipe configuration** - Define recipes directly in your configuration.yaml
+- **Recipe builder UI** for creating recipes through the Home Assistant interface
+- **Recipe recording** from live brewing sessions
+- **Service calls** for all machine operations
+
+See [YAML_RECIPE_CONFIGURATION.md](YAML_RECIPE_CONFIGURATION.md) for details on configuring recipes in YAML.
+
+Example with YAML recipes:
+
+```yaml
+xbloom_mqtt:
+  recipes:
+    - name: "Morning Brew"
+      grind_size: 50
+      rpm: 80
+      bean_weight: 15.0
+      total_water: 250
+      cup_type: "omni_dripper"
+      pours:
+        - volume: 30
+          temperature: 93
+          pausing: 30
+          pattern: "spiral"
+        - volume: 220
+          temperature: 93
+          pausing: 0
+          pattern: "spiral"
+```
+
+Then run the recipe:
+
+```yaml
+service: xbloom_mqtt.run_recipe
+data:
+  recipe_name: "Morning Brew"
+
 
 ### 2. Automation Examples
 
@@ -315,7 +357,7 @@ docker logs xbloom-bridge -f
 
 ```bash
 # Run bridge with debug logging
-xbloom bridge --broker homeassistant.local --device-address B0:F8:93:DB:B1:C1 2>&1 | tee bridge.log
+xbloom bridge --broker homeassistant.local --device-address XX:XX:XX:XX:XX:XX 2>&1 | tee bridge.log
 
 # Or set environment variable
 export LOG_LEVEL=DEBUG
@@ -374,7 +416,7 @@ Options:
 
 ```bash
 # Run multiple bridges for different devices
-xbloom bridge --device-name kitchen --device-address B0:F8:93:DB:B1:C1
+xbloom bridge --device-name kitchen --device-address XX:XX:XX:XX:XX:XX
 xbloom bridge --device-name office --device-address A1:E2:84:CA:A2:D2
 ```
 

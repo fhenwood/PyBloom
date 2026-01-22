@@ -1,0 +1,118 @@
+# XBloom YAML Recipes Configuration
+# Copy this to your Home Assistant configuration.yaml under xbloom_mqtt:
+
+xbloom_mqtt:
+  recipes:
+    # ═══════════════════════════════════════════════════════════════════════════
+    # LIGHT ROAST - Pour Over Recipe
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Dose: 18g | Ratio: 1:16 | Total Water: 288ml | Temp: 90°C
+    - name: "Light Roast"
+      grind_size: 53
+      rpm: 60
+      bean_weight: 18.0
+      total_water: 288
+      cup_type: "omni_dripper"
+      pours:
+        # Bloom: Pour 50ml, wait 30s
+        - volume: 50
+          temperature: 90
+          pausing: 30
+          flow_rate: 3.0
+          pattern: "spiral"
+        # Pour 2: 60ml, 15s interval
+        - volume: 60
+          temperature: 90
+          pausing: 15
+          flow_rate: 3.0
+          pattern: "spiral"
+        # Pour 3: 60ml, 15s interval
+        - volume: 60
+          temperature: 90
+          pausing: 15
+          flow_rate: 3.0
+          pattern: "spiral"
+        # Pour 4: 60ml, 10s interval
+        - volume: 60
+          temperature: 90
+          pausing: 10
+          flow_rate: 3.0
+          pattern: "spiral"
+        # Pour 5: 58ml, 5s interval (final)
+        - volume: 58
+          temperature: 90
+          pausing: 5
+          flow_rate: 3.0
+          pattern: "spiral"
+
+    # ═══════════════════════════════════════════════════════════════════════════
+    # LIANG FAMILY GREEN TEA - Multi-Steep Recipe
+    # ═══════════════════════════════════════════════════════════════════════════
+    # Dose: 5g | Total Water: ~600ml (5 steeps) | Temp: 82°C
+    # Each steep: Pour 90ml → wait 30s → pour 30ml → wait 20s
+    - name: "Liang Family Green Tea"
+      grind_size: 0      # No grinding for tea
+      rpm: 0
+      bean_weight: 5.0   # Tea weight
+      total_water: 600
+      cup_type: "tea"
+      pours:
+        # ─── 1st Steep (~120ml) ───
+        - volume: 90
+          temperature: 82
+          pausing: 30         # Steep 30s
+          flow_rate: 3.0
+          pattern: "center"
+        - volume: 30
+          temperature: 82
+          pausing: 20         # Rest 20s before next steep
+          flow_rate: 3.0
+          pattern: "center"
+
+        # ─── 2nd Steep (~120ml) ───
+        - volume: 90
+          temperature: 82
+          pausing: 30
+          flow_rate: 3.0
+          pattern: "center"
+        - volume: 30
+          temperature: 82
+          pausing: 20
+          flow_rate: 3.0
+          pattern: "center"
+
+        # ─── 3rd Steep (~120ml) ───
+        - volume: 90
+          temperature: 82
+          pausing: 30
+          flow_rate: 3.0
+          pattern: "center"
+        - volume: 30
+          temperature: 82
+          pausing: 20
+          flow_rate: 3.0
+          pattern: "center"
+
+        # ─── 4th Steep (~120ml) ───
+        - volume: 90
+          temperature: 82
+          pausing: 30
+          flow_rate: 3.0
+          pattern: "center"
+        - volume: 30
+          temperature: 82
+          pausing: 20
+          flow_rate: 3.0
+          pattern: "center"
+
+        # ─── 5th Steep (~120ml) ───
+        - volume: 90
+          temperature: 82
+          pausing: 30
+          flow_rate: 3.0
+          pattern: "center"
+        - volume: 30
+          temperature: 82
+          pausing: 0          # No pause after final pour
+          flow_rate: 3.0
+          pattern: "center"

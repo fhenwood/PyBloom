@@ -36,6 +36,8 @@ services:
     volumes:
       # Mount Bluetooth socket
       - /var/run/dbus:/var/run/dbus:ro
+      # Mount source code for development
+      - ./src:/app/src
       
     devices:
       # BLE adapter access

@@ -63,7 +63,8 @@ async def brew_coffee():
         ]
     )
     
-    async with XBloomClient() as client:
+    # Find your device MAC with: xbloom scan
+    async with XBloomClient(mac_address="XX:XX:XX:XX:XX:XX") as client:
         if client.is_connected:
             # This handles everything: bypass, cup, recipe, execute
             await client.brew(recipe, wait_for_completion=True)
@@ -79,7 +80,7 @@ asyncio.run(brew_coffee())
 The main client for controlling the machine.
 
 ```python
-async with XBloomClient(mac_address="B0:F8:93:DB:B1:C1") as client:
+async with XBloomClient(mac_address="XX:XX:XX:XX:XX:XX") as client:
     # High-level brewing
     await client.brew(recipe)                    # Full automated brew
     await client.brew_without_grinding(recipe)   # Skip grinding (pre-ground)
@@ -125,7 +126,7 @@ PourPattern.SPIRAL   # 2 - Spiral outward
 xbloom scan
 
 # Monitor device status
-xbloom monitor B0:F8:93:DB:B1:C1
+xbloom monitor XX:XX:XX:XX:XX:XX
 ```
 
 ## 📁 Project Structure
@@ -133,25 +134,37 @@ xbloom monitor B0:F8:93:DB:B1:C1
 ```
 pybloom/
 ├── src/xbloom/
-│   ├── core/client.py      # Main XBloomClient
+│   ├── core/client.py       # Main XBloomClient
 │   ├── models/
-│   │   ├── types.py        # Recipe, PourStep, etc.
-│   │   └── recipes.py      # Recipe payload builder
+│   │   ├── types.py         # Recipe, PourStep, etc.
+│   │   └── recipes.py       # Recipe payload builder
 │   ├── protocol/
-│   │   ├── constants.py    # Command codes
-│   │   ├── packet.py       # Packet building
-│   │   └── parser.py       # Response parsing
-│   └── connection/         # BLE connection handling
+│   │   ├── constants.py     # Command codes
+│   │   ├── packet.py        # Packet building
+│   │   └── parser.py        # Response parsing
+│   ├── connection/          # BLE connection handling
+│   ├── components/          # Grinder, Brewer, Scale controllers
+│   ├── bridge.py            # MQTT bridge for Home Assistant
+│   └── cli.py               # Command-line interface
 ├── examples/
-│   └── simple_brew.py      # Example usage
-├── tests/                  # Unit tests
-├── PROTOCOL_DOCUMENTATION.md
+│   ├── simple_brew.py       # Basic brewing example
+│   ├── simple_grind.py      # Grinder control
+│   ├── simple_pour.py       # Pour control
+│   └── simple_weight.py     # Scale monitoring
+├── docs/
+│   ├── PROTOCOL_DOCUMENTATION.md  # BLE protocol reference
+│   ├── MQTT_BRIDGE_GUIDE.md       # MQTT/Home Assistant setup
+│   └── YAML_RECIPE_CONFIGURATION.md
+├── custom_components/       # Home Assistant integration
+├── .env.example             # Environment template
 └── README.md
 ```
 
 ## 📚 Documentation
 
-- [Protocol Documentation](PROTOCOL_DOCUMENTATION.md) - Complete BLE protocol reference
+- [Protocol Documentation](docs/PROTOCOL_DOCUMENTATION.md) - Complete BLE protocol reference
+- [MQTT Bridge Guide](docs/MQTT_BRIDGE_GUIDE.md) - Home Assistant integration
+- [YAML Recipe Configuration](docs/YAML_RECIPE_CONFIGURATION.md) - Recipe setup
 
 ## ⚠️ Important Notes
 

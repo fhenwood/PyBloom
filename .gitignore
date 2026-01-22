@@ -1,3 +1,10 @@
+# JavaScript / Node.js
+node_modules/
+*.js
+*.mjs
+package-lock.json
+yarn.lock
+
 # Python
 __pycache__/
 *.py[cod]
@@ -46,8 +53,16 @@ com.xbloom.tbdx.apk_Decompiler.com/
 *.json.bak
 hf-15-*.json
 
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
 # OS
 .DS_Store
 Thumbs.db
 *.json
 internal_notes/*
+resources/*
+sources/*

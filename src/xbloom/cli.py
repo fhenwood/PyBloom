@@ -1,8 +1,10 @@
 import asyncio
+import logging
 import typer
 from rich.console import Console
 from rich.table import Table
 from rich.live import Live
+from rich.logging import RichHandler
 from typing import Optional
 
 from .scanner import discover_devices
@@ -98,15 +100,27 @@ def bridge(
     device_address: Optional[str] = typer.Option(None, help="XBloom device address (auto-discover if not specified)"),
     session_timeout: int = typer.Option(60, help="BLE session timeout in seconds"),
     telemetry_interval: int = typer.Option(5, help="Telemetry publishing interval in seconds"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Enable verbose logging"),
 ):
     """Start MQTT bridge for Home Assistant integration."""
-    
+
+    # Configure logging
+    log_level = logging.DEBUG if verbose else logging.INFO
+    logging.basicConfig(
+        level=log_level,
+        format="%(message)s",
+        datefmt="[%X]",
+        handlers=[RichHandler(rich_tracebacks=True, show_path=False)]
+    )
+    # Also set level for our modules
+    logging.getLogger("xbloom").setLevel(log_level)
+
     try:
         from .bridge import XBloomMQTTBridge, BridgeConfig
     except ImportError:
         console.print("[red]MQTT bridge requires aiomqtt. Install with: pip install aiomqtt[/red]")
         raise typer.Exit(1)
-    
+
     console.print("[bold blue]Starting XBloom MQTT Bridge...[/bold blue]")
     
     # Create configuration

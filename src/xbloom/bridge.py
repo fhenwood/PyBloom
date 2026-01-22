@@ -12,7 +12,7 @@ except ImportError:
 
 from .core.client import XBloomClient
 from .scanner import discover_devices
-from .models.types import XBloomRecipe, PourStep, PourPattern, VibrationPattern, DeviceState
+from .models.types import XBloomRecipe, PourStep, PourPattern, VibrationPattern, DeviceState, CupType
 from .models.recipes import parse_recipe_json
 
 logger = logging.getLogger(__name__)
@@ -62,7 +62,8 @@ class XBloomMQTTBridge:
     async def start(self):
         """Start the MQTT bridge"""
         logger.info(f"Starting XBloom MQTT Bridge for device: {self.config.device_name}")
-        
+
+        # Try auto-discovery at startup, but don't fail if nothing found
         if self.config.auto_discover and not self.config.device_address:
             logger.info("Auto-discovering XBloom devices...")
             devices = await discover_devices(timeout=10.0)
@@ -70,8 +71,7 @@ class XBloomMQTTBridge:
                 self.config.device_address = devices[0].address
                 logger.info(f"Found device: {self.config.device_address}")
             else:
-                logger.error("No XBloom devices found. Please specify device address.")
-                return
+                logger.warning("No XBloom devices found at startup. Will discover when connect is requested.")
                 
         self._running = True
         
@@ -192,10 +192,25 @@ class XBloomMQTTBridge:
         """Ensure BLE connection is active"""
         async with self._session_lock:
             if self.client and self.client.is_connected:
+                # Always publish online status when checking connection (refresh MQTT)
+                await self._publish_availability("online")
+                await self._publish_telemetry(force=True)
                 return True
-                
-            logger.info("Establishing BLE connection...")
-            
+
+            # Auto-discover if no device address
+            if not self.config.device_address:
+                logger.info("No device address, auto-discovering...")
+                devices = await discover_devices(timeout=10.0)
+                if devices:
+                    self.config.device_address = devices[0].address
+                    logger.info(f"Found device: {self.config.device_address}")
+                else:
+                    logger.error("No XBloom devices found")
+                    await self._publish_error("No XBloom devices found")
+                    return False
+
+            logger.info(f"Establishing BLE connection to {self.config.device_address}...")
+
             try:
                 self.client = XBloomClient(self.config.device_address)
                 
@@ -206,9 +221,11 @@ class XBloomMQTTBridge:
                 if connected:
                     logger.info("BLE connection established")
                     await self._publish_availability("online")
+                    await self._publish_telemetry(force=True)
                     return True
                 else:
                     logger.error("Failed to establish BLE connection")
+                    await self._publish_availability("offline")
                     await self._publish_error("BLE connection failed")
                     return False
                     
@@ -224,6 +241,9 @@ class XBloomMQTTBridge:
                 logger.info("Disconnecting from BLE device")
                 await self.client.disconnect()
                 await self._publish_availability("offline")
+            else:
+                 # Ensure we report offline even if we thought we were disconnected
+                 await self._publish_availability("offline")
     
     # Command Handlers
     async def _handle_connect(self, payload: Dict[str, Any]):
@@ -233,6 +253,8 @@ class XBloomMQTTBridge:
     async def _handle_disconnect(self, payload: Dict[str, Any]):
         """Handle manual disconnection request"""
         await self._disconnect_ble()
+    
+
     
     async def _handle_grind(self, payload: Dict[str, Any]):
         """Handle grind command"""
@@ -275,41 +297,63 @@ class XBloomMQTTBridge:
             await self._publish_error(f"Brewer error: {e}")
     
     async def _handle_pour(self, payload: Dict[str, Any]):
-        """Handle manual pour command (immediate brew with temp)"""
+        """Handle manual pour command using direct brewer control with parameters.
+        
+        Large volumes (>250ml) are automatically split into multiple 250ml pours.
+        """
         if not await self._ensure_connected():
             return
-            
-        temp = payload.get("temperature", 93.0)
-        pattern = payload.get("pattern", "center")
-        
-        # Map pattern names to enum values
-        pattern_map = {
-            "center": PourPattern.CENTER,
-            "spiral": PourPattern.SPIRAL, 
-            "circular": PourPattern.CIRCULAR,
-            "circle": PourPattern.CIRCULAR
-        }
         
         try:
-            # Set temperature first
-            await self.client.brewer.set_temperature(temp)
+            # Parse parameters
+            total_volume = int(payload.get("volume", 150))
+            temp = int(payload.get("temperature", 93))
+            flow_rate = float(payload.get("flow_rate", 3.0))
+            pattern = int(payload.get("pattern", 2))  # 0=Center, 1=Circular, 2=Spiral
             
-            # Set pattern if supported
-            if pattern in pattern_map:
-                await self.client.brewer.set_pattern(int(pattern_map[pattern]))
+            MAX_POUR_VOLUME = 250  # Machine limit per pour
             
-            # Start brewing
-            await self.client.brewer.start()
+            logger.info(f"Manual pour: {total_volume}ml at {temp}°C (Direct Control)")
             
-            await self._publish_status({
-                "brewer": {
-                    "active": True, 
-                    "temperature": temp,
-                    "pattern": pattern
-                }
-            })
+            # Split into multiple pours if needed
+            volumes = []
+            remaining = total_volume
+            while remaining > 0:
+                pour_vol = min(remaining, MAX_POUR_VOLUME)
+                volumes.append(pour_vol)
+                remaining -= pour_vol
+            
+            logger.info(f"Pour split into {len(volumes)} step(s): {volumes}")
+            
+            # Move scale to brewer position
+            await self.client.scale.move_right()
+            await asyncio.sleep(2)
+            
+            # Execute each pour
+            for i, volume in enumerate(volumes, 1):
+                logger.info(f"Pour {i}/{len(volumes)}: {volume}ml at {temp}°C")
+                
+                # Start brewer with full parameters (machine handles duration)
+                await self.client.brewer.start(
+                    volume=volume,
+                    temperature=temp,
+                    flow_rate=flow_rate,
+                    pattern=pattern
+                )
+                
+                # Wait for pour to complete (estimated time + buffer)
+                estimated_time = volume / flow_rate
+                await asyncio.sleep(estimated_time + 2)
+                
+                # Don't call stop() between pours - machine auto-stops
+            
+            # Stop after all pours complete (safety)
+            await self.client.brewer.stop()
+            
+            await self._publish_status({"pour": "complete", "volume": total_volume})
             
         except Exception as e:
+            logger.error(f"Pour error: {e}", exc_info=True)
             await self._publish_error(f"Pour error: {e}")
     
     async def _handle_scale_tare(self, payload: Dict[str, Any]):
@@ -377,10 +421,13 @@ class XBloomMQTTBridge:
             # Parse recipe from payload
             recipe = parse_recipe_json(payload)
             
-            # Send and execute recipe
-            await self.client.send_recipe(recipe)
-            await asyncio.sleep(1)  # Brief pause
-            await self.client.execute_recipe(recipe)
+            # Determine if this is a grinding recipe or pour-only
+            if recipe.grind_size > 0 and recipe.bean_weight > 0:
+                logger.info(f"Executing coffee recipe: {recipe.name}")
+                await self.client.brew(recipe, wait_for_completion=False)
+            else:
+                logger.info(f"Executing pour-only recipe: {recipe.name}")
+                await self.client.brew_without_grinding(recipe, wait_for_completion=False)
             
             await self._publish_status({
                 "recipe": {
@@ -460,7 +507,7 @@ class XBloomMQTTBridge:
             except Exception as e:
                 logger.error(f"Telemetry publisher error: {e}")
     
-    async def _publish_telemetry(self):
+    async def _publish_telemetry(self, force: bool = False):
         """Publish current device telemetry"""
         if not self.client:
             return
@@ -479,13 +526,15 @@ class XBloomMQTTBridge:
             "brewer_running": status.brewer.is_running,
         }
         
-        # Only publish if values changed significantly
-        if self._telemetry_changed(telemetry):
+        # Only publish if values changed significantly or forced
+        if force or self._telemetry_changed(telemetry):
             await self.mqtt_client.publish(
                 f"{self.base_topic}/status/telemetry",
                 json.dumps(telemetry)
             )
             self._last_telemetry = telemetry.copy()
+            if force:
+                logger.info("Forced telemetry update published")
     
     def _telemetry_changed(self, new_data: Dict[str, Any]) -> bool:
         """Check if telemetry has changed significantly"""
@@ -514,14 +563,16 @@ class XBloomMQTTBridge:
         """Publish device availability"""
         await self.mqtt_client.publish(
             f"{self.base_topic}/status/availability", 
-            status
+            status,
+            retain=True
         )
     
     async def _publish_bridge_status(self, status: str):
         """Publish bridge status"""
         await self.mqtt_client.publish(
             f"{self.base_topic}/bridge/status",
-            status
+            status,
+            retain=True
         )
     
     async def _publish_status(self, status_data: Dict[str, Any]):

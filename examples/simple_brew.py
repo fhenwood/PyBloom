@@ -6,7 +6,9 @@ Demonstrates the clean high-level API for brewing coffee with the XBloom machine
 This script will grind beans and pour water using a simple recipe.
 
 Usage:
-    python examples/simple_brew.py
+    XBLOOM_MAC=XX:XX:XX:XX:XX:XX python examples/simple_brew.py
+
+Find your device MAC address with: xbloom scan
 """
 
 import asyncio
@@ -18,6 +20,14 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from xbloom import XBloomClient
+
+# Get MAC address from environment variable
+DEVICE_MAC = os.environ.get('XBLOOM_MAC')
+if not DEVICE_MAC:
+    print("Error: XBLOOM_MAC environment variable not set")
+    print("Usage: XBLOOM_MAC=XX:XX:XX:XX:XX:XX python examples/simple_brew.py")
+    print("Find your device with: xbloom scan")
+    sys.exit(1)
 from xbloom.models.types import XBloomRecipe, PourStep, PourPattern, CupType
 
 # Configure logging
@@ -38,7 +48,7 @@ async def main():
         rpm=80,                 # Grinder motor speed
         bean_weight=15.0,       # Grams of beans to grind
         total_water=24,         # 24 * 10 = 240ml total water
-        cup_type=CupType.X_DRIPPER,
+        cup_type=CupType.OMNI_DRIPPER,
         pours=[
             # Bloom pour
             PourStep(
@@ -68,7 +78,7 @@ async def main():
     )
     
     # Connect and brew
-    async with XBloomClient() as client:
+    async with XBloomClient(mac_address=DEVICE_MAC) as client:
         if not client.is_connected:
             print("Failed to connect to XBloom!")
             return
