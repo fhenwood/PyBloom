@@ -1,0 +1,418 @@
+# XBloom Studio Card for Home Assistant
+# ======================================
+# A single card that can be added to ANY existing dashboard.
+# 
+# REQUIREMENTS:
+#   - card-mod: https://github.com/thomasloven/lovelace-card-mod (install via HACS)
+#   - button-card: https://github.com/custom-cards/button-card (install via HACS)
+#   - XBloom MQTT custom component installed and configured
+#
+# ENTITY NAME CONFIGURATION:
+#   If your entities have different names, update these at the top of the card:
+#   - sensor.xbloom_coffee_machine_status -> your status sensor
+#   - button.xbloom_coffee_machine_connect -> your connect button
+#   etc.
+#
+# INSTALLATION:
+#   1. Install card-mod and button-card via HACS
+#   2. Edit any existing dashboard → Add Card → Manual
+#   3. Paste this YAML (starting from `type: vertical-stack`)
+
+type: vertical-stack
+cards:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # HEADER - Title, Status, Connect Button
+  # ═══════════════════════════════════════════════════════════════════════════
+  - type: custom:button-card
+    entity: sensor.xbloom_coffee_machine_status
+    name: XBloom Studio
+    show_state: true
+    show_icon: false
+    show_name: true
+    state_display: |
+      [[[
+        if (!entity || !entity.state) return 'Unknown';
+        return entity.state;
+      ]]]
+    styles:
+      card:
+        - background: "#1c1c1e"
+        - border-radius: 16px
+        - padding: 20px
+        - border: 1px solid rgba(255,255,255,0.08)
+      grid:
+        - grid-template-areas: '"n i" "s i" "b b"'
+        - grid-template-columns: 1fr auto
+        - grid-template-rows: auto auto auto
+      name:
+        - font-size: 24px
+        - font-weight: 600
+        - color: white
+        - justify-self: start
+        - align-self: end
+      state:
+        - font-size: 14px
+        - color: |
+            [[[
+              if (!entity || !entity.state) return '#888';
+              return entity.state === 'connected' ? '#4ade80' : '#ef4444';
+            ]]]
+        - justify-self: start
+        - text-transform: capitalize
+      custom_fields:
+        i:
+          - grid-area: i
+          - width: 60px
+          - height: 60px
+        b:
+          - grid-area: b
+          - margin-top: 16px
+    custom_fields:
+      i: |
+        [[[
+          return `<svg viewBox="0 0 48 48" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.5">
+            <rect x="8" y="4" width="32" height="40" rx="3"/>
+            <rect x="12" y="8" width="24" height="20" rx="2" fill="rgba(255,255,255,0.1)"/>
+            <line x1="16" y1="32" x2="32" y2="32"/>
+            <line x1="16" y1="36" x2="32" y2="36"/>
+            <circle cx="24" cy="40" r="2"/>
+          </svg>`;
+        ]]]
+      b: |
+        [[[
+          const isConnected = entity && entity.state === 'connected';
+          const bgColor = isConnected ? 'rgba(74,222,128,0.15)' : 'rgba(255,255,255,0.1)';
+          const textColor = isConnected ? '#4ade80' : 'rgba(255,255,255,0.8)';
+          const text = isConnected ? 'Disconnect' : 'Connect';
+          return `<div style="
+            background: ${bgColor};
+            border-radius: 10px;
+            padding: 12px 24px;
+            text-align: center;
+            color: ${textColor};
+            font-weight: 500;
+            cursor: pointer;
+          ">${text}</div>`;
+        ]]]
+    tap_action:
+      action: call-service
+      service: button.press
+      service_data:
+        entity_id: button.xbloom_coffee_machine_connect
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # PRIMARY ACTIONS - Grind & Brew Buttons
+  # ═══════════════════════════════════════════════════════════════════════════
+  - type: horizontal-stack
+    cards:
+      - type: custom:button-card
+        entity: sensor.xbloom_coffee_machine_status
+        name: Grind
+        icon: mdi:grid
+        tap_action:
+          action: call-service
+          service: button.press
+          service_data:
+            entity_id: button.xbloom_coffee_machine_grind
+        styles:
+          card:
+            - background: "#1c1c1e"
+            - border-radius: 16px
+            - padding: 24px 16px
+            - border: 1px solid rgba(255,255,255,0.08)
+            - filter: |
+                [[[
+                  if (!entity || !entity.state) return 'grayscale(100%)';
+                  return entity.state !== 'connected' ? 'grayscale(100%)' : 'none';
+                ]]]
+            - opacity: |
+                [[[
+                  if (!entity || !entity.state) return '0.4';
+                  return entity.state !== 'connected' ? '0.4' : '1';
+                ]]]
+            - pointer-events: |
+                [[[
+                  if (!entity || !entity.state) return 'none';
+                  return entity.state !== 'connected' ? 'none' : 'auto';
+                ]]]
+          icon:
+            - color: rgba(255,255,255,0.9)
+            - width: 40px
+            - height: 40px
+          name:
+            - color: rgba(255,255,255,0.9)
+            - font-size: 16px
+            - font-weight: 500
+            - margin-top: 12px
+
+      - type: custom:button-card
+        entity: sensor.xbloom_coffee_machine_status
+        name: Brew
+        icon: mdi:water
+        tap_action:
+          action: call-service
+          service: button.press
+          service_data:
+            entity_id: button.xbloom_coffee_machine_pour
+        styles:
+          card:
+            - background: "#1c1c1e"
+            - border-radius: 16px
+            - padding: 24px 16px
+            - border: 1px solid rgba(255,255,255,0.08)
+            - filter: |
+                [[[
+                  if (!entity || !entity.state) return 'grayscale(100%)';
+                  return entity.state !== 'connected' ? 'grayscale(100%)' : 'none';
+                ]]]
+            - opacity: |
+                [[[
+                  if (!entity || !entity.state) return '0.4';
+                  return entity.state !== 'connected' ? '0.4' : '1';
+                ]]]
+            - pointer-events: |
+                [[[
+                  if (!entity || !entity.state) return 'none';
+                  return entity.state !== 'connected' ? 'none' : 'auto';
+                ]]]
+          icon:
+            - color: rgba(255,255,255,0.9)
+            - width: 40px
+            - height: 40px
+          name:
+            - color: rgba(255,255,255,0.9)
+            - font-size: 16px
+            - font-weight: 500
+            - margin-top: 12px
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # MANUAL CONTROLS - Sliders (Grind, RPM, Temp, Volume)
+  # ═══════════════════════════════════════════════════════════════════════════
+  - type: entities
+    entities:
+      - entity: number.xbloom_coffee_machine_grind_size
+        name: Grind
+        icon: mdi:grain
+      - entity: number.xbloom_coffee_machine_rpm
+        name: RPM
+        icon: mdi:speedometer
+      - entity: number.xbloom_coffee_machine_temperature
+        name: Temp
+        icon: mdi:thermometer
+      - entity: number.xbloom_coffee_machine_volume
+        name: Volume
+        icon: mdi:water
+    card_mod:
+      style: |
+        ha-card {
+          background: #1c1c1e !important;
+          border-radius: 16px !important;
+          border: 1px solid rgba(255,255,255,0.08) !important;
+        }
+        .card-content { padding: 16px 20px !important; }
+        hui-generic-entity-row { padding: 10px 0 !important; }
+        hui-generic-entity-row .info { color: rgba(255,255,255,0.9) !important; }
+        state-badge { color: rgba(255,255,255,0.6) !important; }
+        ha-slider {
+          --paper-slider-active-color: rgba(255,255,255,0.9) !important;
+          --paper-slider-knob-color: rgba(255,255,255,0.95) !important;
+          --paper-slider-container-color: rgba(255,255,255,0.2) !important;
+        }
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # RECIPE I/O - Dropdown + Execute Button
+  # ═══════════════════════════════════════════════════════════════════════════
+  - type: vertical-stack
+    cards:
+      - type: custom:button-card
+        entity: sensor.xbloom_coffee_machine_status
+        show_icon: false
+        show_state: false
+        name: Recipe I/O
+        styles:
+          card:
+            - background: "#1c1c1e"
+            - border-radius: 16px 16px 0 0
+            - padding: 16px 20px 8px 20px
+            - border: 1px solid rgba(255,255,255,0.08)
+            - border-bottom: none
+            - filter: |
+                [[[
+                  if (!entity || !entity.state) return 'grayscale(100%)';
+                  return entity.state !== 'connected' ? 'grayscale(100%)' : 'none';
+                ]]]
+            - opacity: |
+                [[[
+                  if (!entity || !entity.state) return '0.4';
+                  return entity.state !== 'connected' ? '0.4' : '1';
+                ]]]
+          name:
+            - color: white
+            - font-size: 18px
+            - font-weight: 600
+            - justify-self: start
+
+      - type: entities
+        entities:
+          - entity: select.xbloom_coffee_machine_recipe
+            name: Recipe
+        card_mod:
+          style: |
+            ha-card {
+              background: #1c1c1e !important;
+              border-radius: 0 !important;
+              border-left: 1px solid rgba(255,255,255,0.08) !important;
+              border-right: 1px solid rgba(255,255,255,0.08) !important;
+              padding: 0 8px !important;
+            }
+            hui-generic-entity-row .info { color: rgba(255,255,255,0.7) !important; }
+            ha-select {
+              --mdc-theme-surface: #2a2a2e !important;
+              --mdc-select-fill-color: #2a2a2e !important;
+              --mdc-select-ink-color: white !important;
+            }
+
+      - type: custom:button-card
+        entity: sensor.xbloom_coffee_machine_status
+        name: Pour
+        icon: mdi:play
+        show_icon: true
+        tap_action:
+          action: call-service
+          service: button.press
+          service_data:
+            entity_id: button.xbloom_coffee_machine_execute_recipe
+        styles:
+          card:
+            - background: "rgba(255,255,255,0.1)"
+            - border-radius: 0 0 16px 16px
+            - margin: 0 20px 20px 20px
+            - padding: 14px
+            - border: none
+            - filter: |
+                [[[
+                  if (!entity || !entity.state) return 'grayscale(100%)';
+                  return entity.state !== 'connected' ? 'grayscale(100%)' : 'none';
+                ]]]
+            - opacity: |
+                [[[
+                  if (!entity || !entity.state) return '0.4';
+                  return entity.state !== 'connected' ? '0.4' : '1';
+                ]]]
+            - pointer-events: |
+                [[[
+                  if (!entity || !entity.state) return 'none';
+                  return entity.state !== 'connected' ? 'none' : 'auto';
+                ]]]
+          grid:
+            - grid-template-areas: '"i n"'
+            - grid-template-columns: auto 1fr
+          icon:
+            - color: rgba(255,255,255,0.9)
+            - width: 20px
+          name:
+            - color: rgba(255,255,255,0.9)
+            - font-size: 16px
+            - font-weight: 500
+            - justify-self: center
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # FOOTER - Sensors & Activity
+  # ═══════════════════════════════════════════════════════════════════════════
+  - type: horizontal-stack
+    cards:
+      - type: custom:button-card
+        show_icon: false
+        show_name: false
+        show_state: false
+        styles:
+          card:
+            - background: "#1c1c1e"
+            - border-radius: 16px
+            - padding: 16px 20px
+            - border: 1px solid rgba(255,255,255,0.08)
+            - min-height: 120px
+        custom_fields:
+          content: |
+            [[[
+              const weight = states['sensor.xbloom_coffee_machine_weight'];
+              const status = states['sensor.xbloom_coffee_machine_status'];
+              const error = states['sensor.xbloom_coffee_machine_error'];
+              const weightVal = weight && weight.state ? weight.state + ' g' : '-- g';
+              const statusVal = status && status.state ? status.state : '--';
+              const errorVal = error && error.state ? error.state : '--';
+              const statusColor = statusVal === 'connected' ? '#4ade80' : '#ef4444';
+              return `
+                <div style="text-align: left;">
+                  <div style="color: white; font-size: 16px; font-weight: 600; margin-bottom: 12px;">Sensors</div>
+                  <div style="display: flex; justify-content: space-between; margin: 8px 0; color: rgba(255,255,255,0.6); font-size: 14px;">
+                    <span>Weight</span><span style="color: white; font-weight: 500;">${weightVal}</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; margin: 8px 0; color: rgba(255,255,255,0.6); font-size: 14px;">
+                    <span>Status</span><span style="color: ${statusColor}; font-weight: 500; text-transform: capitalize;">${statusVal}</span>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; margin: 8px 0; color: rgba(255,255,255,0.6); font-size: 14px;">
+                    <span>Error</span><span style="color: white; font-weight: 500;">${errorVal}</span>
+                  </div>
+                </div>
+              `;
+            ]]]
+
+      - type: custom:button-card
+        show_icon: false
+        show_name: false
+        show_state: false
+        styles:
+          card:
+            - background: "#1c1c1e"
+            - border-radius: 16px
+            - padding: 16px 20px
+            - border: 1px solid rgba(255,255,255,0.08)
+            - min-height: 120px
+        custom_fields:
+          content: |
+            [[[
+              return `
+                <div style="text-align: left;">
+                  <div style="color: white; font-size: 16px; font-weight: 600; margin-bottom: 12px;">Activity</div>
+                  <div style="color: rgba(255,255,255,0.6); font-size: 13px; line-height: 1.6;">
+                    <div style="margin-bottom: 8px;">
+                      <div style="color: rgba(255,255,255,0.9);">XBloom Event</div>
+                      <div style="font-size: 12px;">Check logbook</div>
+                    </div>
+                  </div>
+                </div>
+              `;
+            ]]]
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # CANCEL BUTTON
+  # ═══════════════════════════════════════════════════════════════════════════
+  - type: custom:button-card
+    entity: button.xbloom_coffee_machine_cancel
+    name: Cancel All Operations
+    icon: mdi:stop-circle
+    tap_action:
+      action: call-service
+      service: button.press
+      service_data:
+        entity_id: button.xbloom_coffee_machine_cancel
+    confirmation:
+      text: "Stop all XBloom operations?"
+    styles:
+      card:
+        - background: "rgba(239,68,68,0.15)"
+        - border-radius: 16px
+        - padding: 14px
+        - border: 1px solid rgba(239,68,68,0.3)
+      grid:
+        - grid-template-areas: '"i n"'
+        - grid-template-columns: auto 1fr
+      icon:
+        - color: "#ef4444"
+        - width: 24px
+      name:
+        - color: "#ef4444"
+        - font-size: 14px
+        - font-weight: 500
+        - justify-self: center

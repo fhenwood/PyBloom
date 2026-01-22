@@ -160,6 +160,50 @@ pybloom/
 └── README.md
 ```
 
+## 🎨 XBloom Studio Dashboard Card
+
+A sleek custom Lovelace card for Home Assistant that replicates the XBloom Studio mobile app aesthetic.
+
+### Features
+- **Dark Studio Theme** - Matches XBloom's premium design language
+- **Connection-Aware UI** - Controls disable when machine is disconnected
+- **Auto-Discovery** - Automatically finds your XBloom entities
+- **All Controls** - Grind, Brew, Recipe selection, Sliders for all parameters
+
+### Installation
+
+1. **Copy the card** to your Home Assistant `www` folder:
+   ```bash
+   cp custom_components/xbloom_mqtt/www/xbloom-studio-card.js /config/www/
+   ```
+
+2. **Add the resource** in Home Assistant:
+   - Go to **Settings → Dashboards → ⋮ (top right) → Resources**
+   - Click **Add Resource**
+   - URL: `/local/xbloom-studio-card.js`
+   - Type: **JavaScript Module**
+
+3. **Add the card** to any dashboard:
+   - Edit dashboard → Add Card → Search "XBloom Studio"
+   - Or add manually with:
+     ```yaml
+     type: custom:xbloom-studio-card
+     ```
+
+4. **Apply the theme** (optional):
+   - Copy `examples/themes/xbloom_studio.yaml` to `/config/themes/`
+   - Go to **Settings → General → Theme → XBloom Studio**
+
+### Screenshot
+
+The card provides:
+- Connect/Disconnect button
+- Grind & Brew action buttons
+- Sliders for Grind Size, RPM, Temperature, Volume
+- Recipe selector with Pour button
+- Sensor readouts (Weight, Status, Error)
+- Cancel button for emergency stop
+
 ## 📚 Documentation
 
 - [Protocol Documentation](docs/PROTOCOL_DOCUMENTATION.md) - Complete BLE protocol reference

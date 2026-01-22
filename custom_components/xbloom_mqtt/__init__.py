@@ -1,6 +1,7 @@
 """XBloom MQTT Integration - Simple Home Assistant component."""
 import logging
 import json
+import os
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -11,6 +12,10 @@ from .const import DOMAIN, MQTT_BASE_TOPIC, MQTT_STATUS_TOPIC, CONF_RECIPES
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BUTTON, Platform.NUMBER, Platform.SELECT, Platform.SENSOR]
+
+# Frontend card URL
+CARD_URL = "/xbloom_mqtt/xbloom-studio-card.js"
+CARD_NAME = "xbloom-studio-card"
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
@@ -26,6 +31,26 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         hass.data[DOMAIN]["yaml_recipes"] = {}
     
     return True
+
+
+async def _register_frontend(hass: HomeAssistant):
+    """Register the XBloom Studio custom card with the frontend."""
+    try:
+        from homeassistant.components.http import StaticPathConfig
+        
+        card_path = os.path.join(os.path.dirname(__file__), "www", "xbloom-studio-card.js")
+        
+        if os.path.exists(card_path) and hass.http:
+            # Register static path for the card JS file
+            await hass.http.async_register_static_paths([
+                StaticPathConfig(CARD_URL, card_path, cache_headers=False)
+            ])
+            _LOGGER.info("XBloom Studio card registered at %s", CARD_URL)
+        else:
+            _LOGGER.debug("XBloom Studio card not registered - file or http not available")
+    except Exception as e:
+        _LOGGER.warning("Could not register XBloom Studio card: %s", e)
+
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

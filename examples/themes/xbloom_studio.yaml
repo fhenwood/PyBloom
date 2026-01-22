@@ -1,0 +1,109 @@
+# XBloom Studio Theme for Home Assistant
+# ========================================
+# A dark theme that matches the XBloom Studio app aesthetic.
+#
+# INSTALLATION:
+#   1. Copy this file to your Home Assistant config/themes/ directory
+#   2. Add to configuration.yaml (if not already present):
+#      frontend:
+#        themes: !include_dir_merge_named themes
+#   3. Restart Home Assistant
+#   4. Apply theme: Settings → General → Theme → XBloom Studio
+
+xbloom_studio:
+  # ─── Background Colors ───────────────────────────────────────────────────────
+  primary-background-color: "#151517"
+  secondary-background-color: "#1c1c1e"
+  ha-card-background: "#1c1c1e"
+  card-background-color: "#1c1c1e"
+  paper-listbox-background-color: "#1c1c1e"
+  paper-card-background-color: "#1c1c1e"
+  paper-dialog-background-color: "#1c1c1e"
+  
+  # ─── Text Colors ─────────────────────────────────────────────────────────────
+  primary-text-color: "#ffffff"
+  secondary-text-color: "rgba(255, 255, 255, 0.7)"
+  text-primary-color: "#ffffff"
+  disabled-text-color: "rgba(255, 255, 255, 0.4)"
+  
+  # ─── Accent Colors ───────────────────────────────────────────────────────────
+  primary-color: "#e8e8e8"
+  accent-color: "#e8e8e8"
+  light-primary-color: "#ffffff"
+  dark-primary-color: "#1c1c1e"
+  
+  # ─── State Colors ────────────────────────────────────────────────────────────
+  state-icon-color: "rgba(255, 255, 255, 0.6)"
+  state-icon-active-color: "#e8e8e8"
+  state-on-color: "#4ade80"
+  state-off-color: "#ef4444"
+  
+  # ─── Card Styling ────────────────────────────────────────────────────────────
+  ha-card-border-radius: "16px"
+  ha-card-border-color: "rgba(255, 255, 255, 0.08)"
+  ha-card-border-width: "1px"
+  ha-card-box-shadow: "0 4px 20px rgba(0, 0, 0, 0.3)"
+  
+  # ─── Slider Styling ──────────────────────────────────────────────────────────
+  paper-slider-knob-color: "#e8e8e8"
+  paper-slider-active-color: "rgba(255, 255, 255, 0.9)"
+  paper-slider-container-color: "rgba(255, 255, 255, 0.2)"
+  paper-slider-knob-start-color: "#e8e8e8"
+  paper-slider-pin-color: "#e8e8e8"
+  
+  # ─── Toggle/Switch Styling ───────────────────────────────────────────────────
+  switch-checked-button-color: "#4ade80"
+  switch-checked-track-color: "rgba(74, 222, 128, 0.3)"
+  switch-unchecked-button-color: "#757575"
+  switch-unchecked-track-color: "rgba(117, 117, 117, 0.3)"
+  
+  # ─── Button Styling ──────────────────────────────────────────────────────────
+  mdc-button-outline-color: "rgba(255, 255, 255, 0.2)"
+  mdc-theme-primary: "#e8e8e8"
+  
+  # ─── Input Styling ───────────────────────────────────────────────────────────
+  input-fill-color: "#2a2a2e"
+  input-ink-color: "#ffffff"
+  input-label-ink-color: "rgba(255, 255, 255, 0.7)"
+  input-idle-line-color: "rgba(255, 255, 255, 0.2)"
+  input-hover-line-color: "rgba(255, 255, 255, 0.4)"
+  input-dropdown-icon-color: "rgba(255, 255, 255, 0.6)"
+  
+  # ─── Select/Dropdown Styling ─────────────────────────────────────────────────
+  mdc-select-fill-color: "#2a2a2e"
+  mdc-select-ink-color: "#ffffff"
+  mdc-select-label-ink-color: "rgba(255, 255, 255, 0.7)"
+  mdc-select-idle-line-color: "rgba(255, 255, 255, 0.2)"
+  mdc-select-dropdown-icon-color: "rgba(255, 255, 255, 0.6)"
+  
+  # ─── Sidebar Styling ─────────────────────────────────────────────────────────
+  sidebar-background-color: "#151517"
+  sidebar-text-color: "#ffffff"
+  sidebar-selected-background-color: "rgba(255, 255, 255, 0.1)"
+  sidebar-selected-icon-color: "#e8e8e8"
+  
+  # ─── Header Styling ──────────────────────────────────────────────────────────
+  app-header-background-color: "#151517"
+  app-header-text-color: "#ffffff"
+  
+  # ─── Divider ─────────────────────────────────────────────────────────────────
+  divider-color: "rgba(255, 255, 255, 0.08)"
+  
+  # ─── Code Block (for logbook etc) ────────────────────────────────────────────
+  code-editor-background-color: "#1c1c1e"
+  codemirror-meta: "#e8e8e8"
+  
+  # ─── Lovelace Specific ───────────────────────────────────────────────────────
+  lovelace-background: "#151517"
+
+  # ─── Custom Card Mod Variables ───────────────────────────────────────────────
+  xbloom-bg-primary: "#151517"
+  xbloom-bg-card: "#1c1c1e"
+  xbloom-bg-elevated: "#2a2a2e"
+  xbloom-text-primary: "#ffffff"
+  xbloom-text-secondary: "rgba(255, 255, 255, 0.7)"
+  xbloom-text-disabled: "rgba(255, 255, 255, 0.4)"
+  xbloom-accent: "#e8e8e8"
+  xbloom-success: "#4ade80"
+  xbloom-error: "#ef4444"
+  xbloom-border: "rgba(255, 255, 255, 0.08)"
