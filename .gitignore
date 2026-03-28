@@ -63,6 +63,7 @@ hf-15-*.json
 .DS_Store
 Thumbs.db
 *.json
+!custom_components/xbloom_mqtt/manifest.json
 internal_notes/*
 resources/*
 sources/*

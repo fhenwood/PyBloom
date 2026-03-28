@@ -1,0 +1,11 @@
+{
+  "domain": "xbloom_mqtt",
+  "name": "XBloom MQTT",
+  "codeowners": ["@fhenwood"],
+  "config_flow": true,
+  "dependencies": ["mqtt"],
+  "documentation": "https://github.com/fhenwood/PyBloom",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/fhenwood/PyBloom/issues",
+  "version": "1.0.0"
+}
